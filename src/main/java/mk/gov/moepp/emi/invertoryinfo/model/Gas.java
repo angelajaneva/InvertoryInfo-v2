@@ -28,4 +28,42 @@ public class Gas {
     @ManyToMany
     List<Analysis> analyses;
 
+    //Getters and Setters (nesto ne rabote lombok)
+
+
+    public int getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public double getConcentrate() {
+        return concentrate;
+    }
+
+    public void setConcentrate(double concentrate) {
+        this.concentrate = concentrate;
+    }
+
+    public List<Category> getCategories() {
+        return categories;
+    }
+
+    public void setCategories(List<Category> categories) {
+        this.categories = categories;
+    }
+
+    public List<Analysis> getAnalyses() {
+        return analyses;
+    }
+
+    public void setAnalyses(List<Analysis> analyses) {
+        this.analyses = analyses;
+    }
 }

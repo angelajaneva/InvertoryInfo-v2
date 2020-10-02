@@ -32,4 +32,42 @@ public class Analysis {
 
     @ManyToMany(mappedBy = "gas")
     private List<Gas> gases;
+
+    //Getters and Setters (ne rabote lombok)
+
+    public int getId() {
+        return id;
+    }
+
+    public Year getYear() {
+        return year;
+    }
+
+    public void setYear(Year year) {
+        this.year = year;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
+    }
+
+    public List<Category> getCategories() {
+        return categories;
+    }
+
+    public void setCategories(List<Category> categories) {
+        this.categories = categories;
+    }
+
+    public List<Gas> getGases() {
+        return gases;
+    }
+
+    public void setGases(List<Gas> gases) {
+        this.gases = gases;
+    }
 }
