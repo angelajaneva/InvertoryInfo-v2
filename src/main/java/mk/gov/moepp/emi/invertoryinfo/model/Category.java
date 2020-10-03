@@ -29,7 +29,7 @@ public class Category {
     @Column(name = "en_name")
     private String englishName;
 
-    private int prefix;
+    private String prefix;
 
     //subcategory?
     @ManyToOne
@@ -69,11 +69,11 @@ public class Category {
         this.englishName = englishName;
     }
 
-    public int getPrefix() {
+    public String getPrefix() {
         return prefix;
     }
 
-    public void setPrefix(int prefix) {
+    public void setPrefix(String prefix) {
         this.prefix = prefix;
     }
 
