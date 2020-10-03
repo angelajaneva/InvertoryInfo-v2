@@ -5,6 +5,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface CategoryRepository extends JpaRepository<Category,Integer> {
 
-    Category findAllByPrefixEquals(String prefix);
+    Category findByPrefixEquals(String prefix);
+
+    Category findByNameEquals(String name);
+
+    Category findByEnglishNameEquals(String englishName);
 
 }

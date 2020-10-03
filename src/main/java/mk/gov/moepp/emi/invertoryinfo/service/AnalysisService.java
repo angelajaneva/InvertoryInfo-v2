@@ -20,4 +20,6 @@ public interface AnalysisService {
 
     Analysis saveFromFile(CreateAnalysisRequest request);
 
+    Analysis saveFromFile(MultipartFile file);
+
 }
