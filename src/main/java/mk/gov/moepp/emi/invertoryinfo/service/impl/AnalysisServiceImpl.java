@@ -122,7 +122,7 @@ public class AnalysisServiceImpl implements AnalysisService {
 
                 }
                 if(!gases.isEmpty() || (category.getName() != null || category.getEnglishName() != null)){
-                    category.setGases(gases);
+         //           category.setGases(gases);
                     categoryRepository.save(category);
 //                    categories.add(category);
                 }

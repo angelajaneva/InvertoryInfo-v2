@@ -41,11 +41,15 @@ public class Category {
     @JsonIgnore
     private Set<Category> children = new HashSet<>();
 
-    @ManyToMany
-    private List<Analysis> analyses;
+//    @ManyToMany
+//    private List<Analysis> analyses;
+//
+//    @ManyToMany
+//    private List<Gas> gases;
 
-    @ManyToMany
-    private List<Gas> gases;
+    //mapped by???
+    @OneToMany(mappedBy = "category")
+    private List<AnalysisCategoryGas> analysisGases;
 
     //Getters and Setters (ne rabote lombok)
 
@@ -91,21 +95,5 @@ public class Category {
 
     public void setChildren(Set<Category> children) {
         this.children = children;
-    }
-
-    public List<Analysis> getAnalyses() {
-        return analyses;
-    }
-
-    public void setAnalyses(List<Analysis> analyses) {
-        this.analyses = analyses;
-    }
-
-    public List<Gas> getGases() {
-        return gases;
-    }
-
-    public void setGases(List<Gas> gases) {
-        this.gases = gases;
     }
 }

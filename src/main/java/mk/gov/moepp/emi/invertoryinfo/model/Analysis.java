@@ -27,11 +27,14 @@ public class Analysis {
     @Column(name = "deleted")
     private boolean deleted = false;
 
-    @ManyToMany(mappedBy = "category")
-    private List<Category> categories;
+//    @ManyToMany(mappedBy = "category")
+//    private List<Category> categories;
+//
+//    @ManyToMany(mappedBy = "gas")
+//    private List<Gas> gases;
 
-    @ManyToMany(mappedBy = "gas")
-    private List<Gas> gases;
+    @OneToMany(mappedBy = "analysis")
+    private List<AnalysisCategoryGas> categoryGases;
 
     //Getters and Setters (ne rabote lombok)
 
@@ -53,21 +56,5 @@ public class Analysis {
 
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
-    }
-
-    public List<Category> getCategories() {
-        return categories;
-    }
-
-    public void setCategories(List<Category> categories) {
-        this.categories = categories;
-    }
-
-    public List<Gas> getGases() {
-        return gases;
-    }
-
-    public void setGases(List<Gas> gases) {
-        this.gases = gases;
     }
 }

@@ -22,14 +22,9 @@ public class Gas {
     private String name;
     private double concentrate;
 
-    @ManyToMany(mappedBy = "category")
-    List<Category> categories;
-
-    @ManyToMany
-    List<Analysis> analyses;
-
+    @OneToMany(mappedBy = "gas")
+    private List<AnalysisCategoryGas> analysisCategory;
     //Getters and Setters (nesto ne rabote lombok)
-
 
     public int getId() {
         return id;
@@ -51,19 +46,5 @@ public class Gas {
         this.concentrate = concentrate;
     }
 
-    public List<Category> getCategories() {
-        return categories;
-    }
 
-    public void setCategories(List<Category> categories) {
-        this.categories = categories;
-    }
-
-    public List<Analysis> getAnalyses() {
-        return analyses;
-    }
-
-    public void setAnalyses(List<Analysis> analyses) {
-        this.analyses = analyses;
-    }
 }
