@@ -3,6 +3,7 @@ package mk.gov.moepp.emi.invertoryinfo.service.impl;
 import mk.gov.moepp.emi.invertoryinfo.model.Analysis;
 import mk.gov.moepp.emi.invertoryinfo.model.Category;
 import mk.gov.moepp.emi.invertoryinfo.model.Gas;
+import mk.gov.moepp.emi.invertoryinfo.model.Requests.CreateAnalysisRequest;
 import mk.gov.moepp.emi.invertoryinfo.repository.AnalysisRepository;
 import mk.gov.moepp.emi.invertoryinfo.repository.CategoryRepository;
 import mk.gov.moepp.emi.invertoryinfo.service.AnalysisService;
@@ -59,7 +60,8 @@ public class AnalysisServiceImpl implements AnalysisService {
     }
 
     @Override
-    public Analysis saveFromFile(MultipartFile file) {
+    public Analysis saveFromFile(CreateAnalysisRequest request) {
+        MultipartFile file = request.getFile();
         //Prvicno test zimanje na podatoci treba da se naprave ubavo
         try {
             //Citame od excel
