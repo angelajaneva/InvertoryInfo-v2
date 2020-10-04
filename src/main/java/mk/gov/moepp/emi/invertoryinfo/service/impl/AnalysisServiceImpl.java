@@ -1,12 +1,15 @@
 package mk.gov.moepp.emi.invertoryinfo.service.impl;
 
 import mk.gov.moepp.emi.invertoryinfo.model.Analysis;
+import mk.gov.moepp.emi.invertoryinfo.model.AnalysisCategoryGas;
 import mk.gov.moepp.emi.invertoryinfo.model.Category;
 import mk.gov.moepp.emi.invertoryinfo.model.Gas;
 import mk.gov.moepp.emi.invertoryinfo.model.Requests.CreateAnalysisRequest;
 import mk.gov.moepp.emi.invertoryinfo.model.enums.FileType;
+import mk.gov.moepp.emi.invertoryinfo.repository.AnalyseCategoryGasRepository;
 import mk.gov.moepp.emi.invertoryinfo.repository.AnalysisRepository;
 import mk.gov.moepp.emi.invertoryinfo.repository.CategoryRepository;
+import mk.gov.moepp.emi.invertoryinfo.repository.GasRepository;
 import mk.gov.moepp.emi.invertoryinfo.service.AnalysisService;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -29,10 +32,14 @@ public class AnalysisServiceImpl implements AnalysisService {
 
     private final AnalysisRepository analysisRepository;
     private final CategoryRepository categoryRepository;
+    private final GasRepository gasRepository;
+    private final AnalyseCategoryGasRepository analyseCategoryGasRepository;
 
-    public AnalysisServiceImpl(AnalysisRepository analysisRepository, CategoryRepository categoryRepository) {
+    public AnalysisServiceImpl(AnalysisRepository analysisRepository, CategoryRepository categoryRepository, GasRepository gasRepository, AnalyseCategoryGasRepository analyseCategoryGasRepository) {
         this.analysisRepository = analysisRepository;
         this.categoryRepository = categoryRepository;
+        this.gasRepository = gasRepository;
+        this.analyseCategoryGasRepository = analyseCategoryGasRepository;
     }
 
     @Override
@@ -144,6 +151,11 @@ public class AnalysisServiceImpl implements AnalysisService {
             XSSFWorkbook workbook = new XSSFWorkbook(file.getInputStream());
             Iterator<Sheet> sheetIterator = workbook.sheetIterator();
             FileType fileType = FileType.GAS;
+            Analysis analyse = new Analysis();
+            String gasName;
+            String type = null;
+            int stringIndex = 1;
+
             while (sheetIterator.hasNext()){
                 XSSFSheet xssfSheet = (XSSFSheet) sheetIterator.next();
                 Iterator<Row> rowIterator = xssfSheet.rowIterator();
@@ -157,13 +169,21 @@ public class AnalysisServiceImpl implements AnalysisService {
                     while (cellIterator.hasNext()){
                         Cell cell = cellIterator.next();
                         //kakov tip na file doznavame
-                        if (cell.getCellType() == CellType._NONE || cell.getCellType() == CellType.BLANK){
+                        if (row.getRowNum() > 2 && cell.getCellType() == CellType._NONE || cell.getCellType() == CellType.BLANK){
                             break;
                         }
                         else if (row.getRowNum() == 0 && cell.getCellType() == CellType.STRING){
-                            String type = cell.getStringCellValue();
-                            if (type.toLowerCase().startsWith("inventory year")){
+                            String text = cell.getStringCellValue();
+                            stringIndex = cell.getColumnIndex() + 1;
+                            if (text.toLowerCase().startsWith("inventory year")){
                                 fileType = FileType.YEARLY;
+                                analyse = getAnalyse(text);
+                                if (analyse == null){
+                                    throw new ResourceNotFoundException("Тhe file is not set properly");
+                                }
+                            }
+                            else{
+                                type = text;
                             }
                         }
                         else if (cell.getCellType() == CellType.STRING){
@@ -178,6 +198,17 @@ public class AnalysisServiceImpl implements AnalysisService {
                         }
                         else if (cell.getCellType() == CellType.NUMERIC || cell.getCellType() == CellType.FORMULA){
                             //tuka treba da prodolzam so za gas ili spored godina da se procitat podatocite
+                            if (row.getRowNum() > 2) {
+                                double concentrate = cell.getNumericCellValue();
+
+                                createAnalyse(list, category, fileType, concentrate, analyse, type, cell.getColumnIndex(), stringIndex);
+
+
+                            }else {
+                                String year = String.valueOf(cell.getNumericCellValue());
+                                year = year.substring(0, year.lastIndexOf("."));
+                                list.add(year);
+                            }
                         }
 
 
@@ -187,14 +218,89 @@ public class AnalysisServiceImpl implements AnalysisService {
 
             }
 
-            List<String> gasesName = new ArrayList<>();
-            List<Category> categories = new ArrayList<>();
         } catch (IOException e) {
             e.printStackTrace();
         }
 
 
         return null;
+    }
+
+    Gas getGas(String type){
+        Gas gas = gasRepository.findByNameEquals(type);
+        if (gas != null){
+            return gas;
+        }
+        gas = new Gas();
+        gas.setName(type);
+        return gas;
+    }
+
+    Analysis getAnalyse(String type){
+        try {
+            Year year = Year.parse(type);
+            Analysis analysis = analysisRepository.findByYearEquals(year);
+            if (analysis != null){
+                return analysis;
+            }
+            Analysis newAnalyse = new Analysis();
+            newAnalyse.setYear(year);
+            return analysisRepository.save(newAnalyse);
+        } catch (Exception ex){
+            ex.printStackTrace();
+        }
+
+        return null;
+    }
+
+    void createAnalyse(List<String> list, Category category, FileType fileType, double concentrate, Analysis analyse, String gasName, int index, int stringIndex){
+        AnalysisCategoryGas analysisCategoryGas;
+        String text = list.get(index - stringIndex);
+
+        //najverojatno samo spored gas ce citame oti gi ima i na angliski i na makedonski iminjata
+        if (fileType == FileType.YEARLY){
+            //stringIndex ni e kolku koloni imame za iminjata za da go zemime tocniot gasso ni treba
+            //nemozime spored gasName da prebaruvame oti sekako vekje postoe so toa ime ce mora da se kreira nov gas
+            //ama problem ce bide so za 2 analizi ce treba 2 pati da cuvame za istiot gas
+            Gas gas = gasRepository.findByNameEquals(text);
+
+            if (gas == null){
+                gas = new Gas();
+                gas.setName(text);
+                gas.setConcentrate(concentrate);
+                gas = gasRepository.save(gas);
+            }
+            else gas.setConcentrate(concentrate);
+
+            analysisCategoryGas = analyseCategoryGasRepository.findByAnalysis_IdAndCategory_IdAndGas_Id(analyse.getId(), category.getId(), gas.getId());
+
+            analysisCategoryGas = new AnalysisCategoryGas(analyse, category, gas);
+            analysisCategoryGas = analyseCategoryGasRepository.save(analysisCategoryGas);
+        }
+        else{
+            analyse = getAnalyse(text);
+            List<AnalysisCategoryGas> gases = analyseCategoryGasRepository.findByAnalysis_IdAndCategory_Id(analyse.getId(), category.getId());
+            Gas gas = null;
+            if (gases != null && gases.size() != 0) {
+                for (AnalysisCategoryGas analysisCategoryGas1 : gases) {
+                    if (analysisCategoryGas1.getGas().getName().equals(gasName)) {
+                        gas = analysisCategoryGas1.getGas();
+                        gas.setConcentrate(concentrate);
+                        gas = gasRepository.save(gas);
+                        break;
+                    }
+                }
+            }
+            if (gas == null){
+                gas = new Gas();
+                gas.setName(gasName);
+                gas.setConcentrate(concentrate);
+                gasRepository.save(gas);
+                analysisCategoryGas = new AnalysisCategoryGas(analyse,category,gas);
+                analyseCategoryGasRepository.save(analysisCategoryGas);
+            }
+
+        }
     }
 
     Category setCategory(Category category, String text, int columnIndex, FileType fileType){
@@ -221,7 +327,6 @@ public class AnalysisServiceImpl implements AnalysisService {
             Category subcategory = categoryRepository.findByPrefixEquals(prefix);
             category.setSubcategory(subcategory);
         }
-
 
         return categoryRepository.save(category);
     }
