@@ -177,13 +177,16 @@ public class AnalysisServiceImpl implements AnalysisService {
                             stringIndex = cell.getColumnIndex() + 1;
                             if (text.toLowerCase().startsWith("inventory year")){
                                 fileType = FileType.YEARLY;
-                                analyse = getAnalyse(text);
-                                if (analyse == null){
-                                    throw new ResourceNotFoundException("Тhe file is not set properly");
-                                }
+                                break;
+//                                analyse = getAnalyse(text);
+//                                if (analyse == null){
+//                                    throw new ResourceNotFoundException("Тhe file is not set properly");
+//                                }
+
                             }
                             else{
                                 type = text;
+                                fileType = FileType.GAS;
                             }
                         }
                         else if (cell.getCellType() == CellType.STRING){
@@ -204,7 +207,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                                 createAnalyse(list, category, fileType, concentrate, analyse, type, cell.getColumnIndex(), stringIndex);
 
 
-                            }else {
+                            } else {
                                 String year = String.valueOf(cell.getNumericCellValue());
                                 year = year.substring(0, year.lastIndexOf("."));
                                 list.add(year);
@@ -319,13 +322,14 @@ public class AnalysisServiceImpl implements AnalysisService {
         }
         //ako ne postoe da kreirame nova
         if (text.contains("-")){
-            String prefix = text.substring(0, text.indexOf("-"));
+            String prefix = text.substring(0, text.indexOf("-")).trim();
+            category.setPrefix(prefix);
+
             if (prefix.contains(".")){
                 prefix = prefix.substring(0, prefix.lastIndexOf("."));
+                Category subcategory = categoryRepository.findByPrefixEquals(prefix);
+                category.setSubcategory(subcategory);
             }
-            category.setPrefix(prefix);
-            Category subcategory = categoryRepository.findByPrefixEquals(prefix);
-            category.setSubcategory(subcategory);
         }
 
         return categoryRepository.save(category);
