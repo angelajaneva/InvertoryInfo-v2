@@ -172,16 +172,17 @@ public class AnalysisServiceImpl implements AnalysisService {
                         if (row.getRowNum() > 2 && cell.getCellType() == CellType._NONE || cell.getCellType() == CellType.BLANK){
                             break;
                         }
-                        else if (row.getRowNum() == 0 && cell.getCellType() == CellType.STRING){
-                            String text = cell.getStringCellValue();
+                        else if (row.getRowNum() == 0 && cell.getCellType() == CellType.STRING && !cell.getStringCellValue().isEmpty()){
+                            String text = cell.getStringCellValue().trim();
                             stringIndex = cell.getColumnIndex() + 1;
                             if (text.toLowerCase().startsWith("inventory year")){
                                 fileType = FileType.YEARLY;
-                                break;
-//                                analyse = getAnalyse(text);
-//                                if (analyse == null){
-//                                    throw new ResourceNotFoundException("Тhe file is not set properly");
-//                                }
+                                String[]parts = text.split("\\s+");
+                                String year = parts[parts.length-1];
+                                analyse = getAnalyse(year);
+                                if (analyse == null){
+                                    throw new ResourceNotFoundException("Тhe file is not set properly");
+                                }
 
                             }
                             else{
@@ -259,50 +260,36 @@ public class AnalysisServiceImpl implements AnalysisService {
     void createAnalyse(List<String> list, Category category, FileType fileType, double concentrate, Analysis analyse, String gasName, int index, int stringIndex){
         AnalysisCategoryGas analysisCategoryGas;
         String text = list.get(index - stringIndex);
-
-        //najverojatno samo spored gas ce citame oti gi ima i na angliski i na makedonski iminjata
-        if (fileType == FileType.YEARLY){
-            //stringIndex ni e kolku koloni imame za iminjata za da go zemime tocniot gasso ni treba
-            //nemozime spored gasName da prebaruvame oti sekako vekje postoe so toa ime ce mora da se kreira nov gas
-            //ama problem ce bide so za 2 analizi ce treba 2 pati da cuvame za istiot gas
-            Gas gas = gasRepository.findByNameEquals(text);
-
-            if (gas == null){
-                gas = new Gas();
-                gas.setName(text);
-                gas.setConcentrate(concentrate);
-                gas = gasRepository.save(gas);
-            }
-            else gas.setConcentrate(concentrate);
-
-            analysisCategoryGas = analyseCategoryGasRepository.findByAnalysis_IdAndCategory_IdAndGas_Id(analyse.getId(), category.getId(), gas.getId());
-
-            analysisCategoryGas = new AnalysisCategoryGas(analyse, category, gas);
-            analysisCategoryGas = analyseCategoryGasRepository.save(analysisCategoryGas);
+        List<AnalysisCategoryGas> gasses = null;
+        //Ako e spored godina najdi gi site gasovi so gi imame
+        if (fileType == FileType.YEARLY && analyse != null && category != null){
+            gasses = analyseCategoryGasRepository.findByAnalysis_IdAndCategory_Id(analyse.getId(), category.getId());
         }
-        else{
+        //Ako e spored Gas togas
+        else if (category != null){
             analyse = getAnalyse(text);
-            List<AnalysisCategoryGas> gases = analyseCategoryGasRepository.findByAnalysis_IdAndCategory_Id(analyse.getId(), category.getId());
-            Gas gas = null;
-            if (gases != null && gases.size() != 0) {
-                for (AnalysisCategoryGas analysisCategoryGas1 : gases) {
-                    if (analysisCategoryGas1.getGas().getName().equals(gasName)) {
-                        gas = analysisCategoryGas1.getGas();
-                        gas.setConcentrate(concentrate);
-                        gas = gasRepository.save(gas);
-                        break;
-                    }
+            gasses = analyseCategoryGasRepository.findByAnalysis_IdAndCategory_Id(analyse.getId(), category.getId());
+        }
+        Gas gas = null;
+        if (gasses != null && gasses.size() != 0){
+            for (AnalysisCategoryGas analysisCategoryGas1 : gasses) {
+                if (analysisCategoryGas1.getGas().getName().equals(gasName)) {
+                    gas = analysisCategoryGas1.getGas();
+                    gas.setConcentrate(concentrate);
+                    break;
                 }
             }
-            if (gas == null){
-                gas = new Gas();
-                gas.setName(gasName);
-                gas.setConcentrate(concentrate);
-                gasRepository.save(gas);
-                analysisCategoryGas = new AnalysisCategoryGas(analyse,category,gas);
-                analyseCategoryGasRepository.save(analysisCategoryGas);
-            }
-
+        }
+        if (gas == null){
+            gas = new Gas();
+            gas.setName(gasName);
+            gas.setConcentrate(concentrate);
+        }
+        gasRepository.save(gas);
+        analysisCategoryGas = analyseCategoryGasRepository.findByAnalysis_IdAndCategory_IdAndGas_Id(analyse.getId(), category.getId(), gas.getId());
+        if (analysisCategoryGas == null) {
+            analysisCategoryGas = new AnalysisCategoryGas(analyse, category, gas);
+            analyseCategoryGasRepository.save(analysisCategoryGas);
         }
     }
 
