@@ -13,6 +13,7 @@ import mk.gov.moepp.emi.invertoryinfo.service.GasService;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.List;
 
 @Service
@@ -86,5 +87,11 @@ public class AnalysisCategoryGasServiceImpl implements AnalysisCategoryGasServic
         if (analysis != null && gas != null && category != null)
             return analyseCategoryGasRepository.findByAnalysis_IdAndCategory_IdAndGas_Id(analysis.getId(), gas.getId(), category.getId());
         else throw new ResourceNotFoundException("Analyse, Gas and Category not founded");
+    }
+
+    @Override
+    @Transactional
+    public List<AnalysisCategoryGas> saveAllAnalysisCategoryGas(List<AnalysisCategoryGas> analysisCategoryGases) {
+        return analyseCategoryGasRepository.saveAll(analysisCategoryGases);
     }
 }

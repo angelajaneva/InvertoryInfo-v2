@@ -21,6 +21,7 @@ import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.transaction.Transactional;
 import java.io.IOException;
 import java.time.Year;
 import java.util.ArrayList;
@@ -76,6 +77,7 @@ public class AnalysisServiceImpl_v2 implements AnalysisService{
     }
 
     @Override
+    @Transactional
     public Analysis saveFromFile(MultipartFile file) {
         try {
             XSSFWorkbook workbook = new XSSFWorkbook(file.getInputStream());
@@ -94,6 +96,7 @@ public class AnalysisServiceImpl_v2 implements AnalysisService{
 
                 //cuvam godina ili gas
                 List<String> list = new ArrayList<>();
+                List<AnalysisCategoryGas> analysisCategoryGases = new ArrayList<>();
 
                 while (rowIterator.hasNext()){
                     Row row = rowIterator.next();
@@ -172,7 +175,7 @@ public class AnalysisServiceImpl_v2 implements AnalysisService{
                                     gas.setConcentrate(concentrate);
                                     if (category != null) {
                                         //gasService.saveGas(gas);
-                                        createAnalysisCategoryGas(analysis, category, gas, fileType);
+                                        analysisCategoryGases.add(createAnalysisCategoryGas(analysis, category, gas, fileType));
                                     }
                                 }
                                 else {
@@ -182,7 +185,7 @@ public class AnalysisServiceImpl_v2 implements AnalysisService{
 
                                     if (category != null) {
                                         //gasService.saveGas(gas);
-                                        createAnalysisCategoryGas(analysis, category, gas, fileType);
+                                        analysisCategoryGases.add(createAnalysisCategoryGas(analysis, category, gas, fileType));
                                     }
                                 }
                             } else if (cell.getCellType() == CellType._NONE || cell.getCellType() == CellType.BLANK){
@@ -196,6 +199,8 @@ public class AnalysisServiceImpl_v2 implements AnalysisService{
                     }
                 }
 
+                analysisCategoryGases = analysisCategoryGasService.saveAllAnalysisCategoryGas(analysisCategoryGases);
+
             }
             workbook.close();
 
@@ -208,8 +213,11 @@ public class AnalysisServiceImpl_v2 implements AnalysisService{
         return getAnalysis(Year.of(2000));
     }
 
-    void createAnalysisCategoryGas(Analysis analysis, Category category, Gas gas, FileType fileType){
+    AnalysisCategoryGas createAnalysisCategoryGas(Analysis analysis, Category category, Gas gas, FileType fileType){
         List<AnalysisCategoryGas> gasses;
+
+        categoryService.saveCategory(category);
+
         if (fileType == FileType.YEARLY) {
             gasses = analysisCategoryGasService.findByAnalysisAndCategory(analysis, category);
         } else {
@@ -225,7 +233,13 @@ public class AnalysisServiceImpl_v2 implements AnalysisService{
             }
         }
         gasService.saveGas(gas);
-        analysisCategoryGasService.saveAnalysisCategoryGas(analysis, category, gas);
+
+        AnalysisCategoryGas analysisCategoryGas = new AnalysisCategoryGas();
+        analysisCategoryGas.setAnalysis(analysis);
+        analysisCategoryGas.setCategory(category);
+        analysisCategoryGas.setGas(gas);
+
+        return analysisCategoryGas;
     }
 
 
@@ -261,7 +275,7 @@ public class AnalysisServiceImpl_v2 implements AnalysisService{
             category.setEnglishName(text);
         }
 
-        return categoryService.saveCategory(category);
+        return category;
     }
 
     Analysis getAnalysis(Year year){

@@ -13,7 +13,10 @@ import java.util.Objects;
 @NoArgsConstructor
 @Entity
 @EqualsAndHashCode(of = "id")
-@Table(name = "analysis_category_Gas")
+@Table(name = "analysis_category_gas", indexes = {
+        @Index(name = "IX_Analysis_Category", columnList = "analysis_id,category_id"),
+        @Index(name = "IX_Gasses_Category", columnList = "gas_id,category_id")
+})
 public class AnalysisCategoryGas {
 
     @Id
@@ -24,7 +27,6 @@ public class AnalysisCategoryGas {
 //    @JoinColumn(name = "fk_analysis", insertable = false, updatable = false)
     @JsonManagedReference
     private Analysis analysis;
-
 
     @ManyToOne
 //    @JoinColumn(name = "fk_category", insertable = false, updatable = false)
