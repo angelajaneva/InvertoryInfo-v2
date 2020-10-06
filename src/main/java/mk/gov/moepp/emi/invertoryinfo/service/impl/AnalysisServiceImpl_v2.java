@@ -78,7 +78,7 @@ public class AnalysisServiceImpl_v2 implements AnalysisService{
 
     @Override
     @Transactional
-    public Analysis saveFromFile(MultipartFile file) {
+    public void saveFromFile(MultipartFile file) {
         try {
             XSSFWorkbook workbook = new XSSFWorkbook(file.getInputStream());
             int numberOfSheets = workbook.getNumberOfSheets();
@@ -122,8 +122,8 @@ public class AnalysisServiceImpl_v2 implements AnalysisService{
                                 if (text.toLowerCase().startsWith("inventory year:")){
                                     fileType = FileType.YEARLY;
                                     String[] parts = text.split("\\s+");
-                                    String strYear = parts[parts.length-1].trim();
-                                    Year year = getYearFromString(strYear);
+                                    String year = parts[parts.length-1].trim();
+                                //    Year year = getYearFromString(strYear);
                                     analysis = getAnalysis(year);
                                 } else if (!emptyString(text)){
                                     fileType = FileType.GAS;
@@ -160,7 +160,7 @@ public class AnalysisServiceImpl_v2 implements AnalysisService{
                                 double concentrate = cell.getNumericCellValue();
                                 if (fileType == FileType.GAS){
                                     //a barame analizata za dadenata godina
-                                    Year year = getYearFromString(list.get(cell.getColumnIndex() - whichCategoryName));
+                                    String year = list.get(cell.getColumnIndex() - whichCategoryName);
                                     analysis = getAnalysis(year);
                                     //kreirame nov Gas za dadenata vrska
                                     //dokolku pogore ispadnalo greska i gas ni e null togas error
@@ -207,10 +207,6 @@ public class AnalysisServiceImpl_v2 implements AnalysisService{
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-
-
-        return getAnalysis(Year.of(2000));
     }
 
     AnalysisCategoryGas createAnalysisCategoryGas(Analysis analysis, Category category, Gas gas, FileType fileType){
@@ -278,7 +274,7 @@ public class AnalysisServiceImpl_v2 implements AnalysisService{
         return category;
     }
 
-    Analysis getAnalysis(Year year){
+    Analysis getAnalysis(String year){
         Analysis analysis = analysisRepository.findByYearEquals(year);
         if (analysis != null){
             return analysis;

@@ -21,7 +21,7 @@ public class Analysis {
     @Id
     @GeneratedValue(strategy= GenerationType.AUTO)
     private int id;
-    private Year year; // ili int?
+    private String year; // ili int?
 
     @Column(name = "deleted")
     private boolean deleted = false;
@@ -42,11 +42,11 @@ public class Analysis {
         return id;
     }
 
-    public Year getYear() {
+    public String getYear() {
         return year;
     }
 
-    public void setYear(Year year) {
+    public void setYear(String year) {
         this.year = year;
     }
 
