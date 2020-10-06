@@ -23,14 +23,14 @@ public class AnalysisController {
     }
 
     @PostMapping("/upload") // //new annotation since 4.3
-    public Analysis singleFileUpload(@RequestParam("file") MultipartFile file) throws FileNotFoundException {
+    public void singleFileUpload(@RequestParam("file") MultipartFile file) throws FileNotFoundException {
 
         if (file.isEmpty()) {
 //            redirectAttributes.addFlashAttribute("message", "Please select a file to upload");
             throw new FileNotFoundException("File not found");
         }
 
-        return analysisService.saveFromFile(file);
+        analysisService.saveFromFile(file);
     }
 
     @PostMapping("/create") // //new annotation since 4.3

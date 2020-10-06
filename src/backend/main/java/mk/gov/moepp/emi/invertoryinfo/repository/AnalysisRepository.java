@@ -7,6 +7,6 @@ import java.time.Year;
 
 public interface AnalysisRepository extends JpaRepository<Analysis, Integer> {
 
-    Analysis findByYearEquals(Year year);
+    Analysis findByYearEquals(String year);
 
 }
