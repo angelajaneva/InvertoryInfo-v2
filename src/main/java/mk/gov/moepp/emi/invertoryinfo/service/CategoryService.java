@@ -17,4 +17,10 @@ public interface CategoryService {
 
     void deleteCategory(int id);
 
+    Category getCategoryByName(String name);
+
+    Category getCategoryByEnglishName(String name);
+
+    Category findByPrefix(String prefix);
+
 }

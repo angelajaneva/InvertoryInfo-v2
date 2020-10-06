@@ -6,7 +6,6 @@ import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Objects;
 
-@NoArgsConstructor
 @Entity
 public class AnalysisCategoryGas {
 
@@ -15,32 +14,31 @@ public class AnalysisCategoryGas {
     private int id;
 
     @ManyToOne
-    @JoinColumn(name = "fk_analysis")
+//    @JoinColumn(name = "fk_analysis", insertable = false, updatable = false)
     private Analysis analysis;
 
+
     @ManyToOne
-    @JoinColumn(name = "fk_category")
+//    @JoinColumn(name = "fk_category", insertable = false, updatable = false)
     private Category category;
 
     @ManyToOne
-    @JoinColumn(name = "fk_gas")
+//    @JoinColumn(name = "fk_gas", insertable = false, updatable = false)
     private Gas gas;
 
     public AnalysisCategoryGas(Analysis analysis, Category category, Gas gas) {
 
-//        this.id = new AnalysisCategoryGasId(analysis.getId(), category.getId(), gas.getId());
 
         this.analysis = analysis;
         this.category = category;
         this.gas = gas;
+    }
 
-        // update relationships to assure referential integrity
-//        p.getBooks().add(this);
-//        b.getPublishers().add(this);
+    public AnalysisCategoryGas() {
 
     }
 
-//    public AnalysisCategoryGasId getId() {
+    //    public AnalysisCategoryGasId getId() {
 //        return id;
 //    }
     public int getId(){

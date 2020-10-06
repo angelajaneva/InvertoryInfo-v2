@@ -4,6 +4,7 @@ package mk.gov.moepp.emi.invertoryinfo.controller;
 import mk.gov.moepp.emi.invertoryinfo.model.Analysis;
 import mk.gov.moepp.emi.invertoryinfo.model.Requests.CreateAnalysisRequest;
 import mk.gov.moepp.emi.invertoryinfo.service.AnalysisService;
+import mk.gov.moepp.emi.invertoryinfo.service.impl.AnalysisServiceImpl_v2;
 import org.springframework.util.MimeTypeUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,9 +16,9 @@ import java.io.FileNotFoundException;
 @RequestMapping(path = "/analysis", produces = MimeTypeUtils.APPLICATION_JSON_VALUE)
 public class AnalysisController {
 
-    private final AnalysisService analysisService;
+    private final AnalysisServiceImpl_v2 analysisService;
 
-    public AnalysisController(AnalysisService analysisService){
+    public AnalysisController(AnalysisServiceImpl_v2 analysisService){
         this.analysisService = analysisService;
     }
 
@@ -33,7 +34,7 @@ public class AnalysisController {
     }
 
     @PostMapping("/create") // //new annotation since 4.3
-    public Analysis singleFileUpload(@RequestBody CreateAnalysisRequest request) throws FileNotFoundException {
+    public Analysis CreateAnalyse(@RequestBody CreateAnalysisRequest request) throws FileNotFoundException {
 
         if (request.getFile().isEmpty()) {
 //            redirectAttributes.addFlashAttribute("message", "Please select a file to upload");

@@ -48,7 +48,9 @@ public class Category {
 //    private List<Gas> gases;
 
     //mapped by???
-    @OneToMany(mappedBy = "category")
+    @OneToMany(
+            mappedBy = "category",
+            cascade = CascadeType.PERSIST)
     private List<AnalysisCategoryGas> analysisGases;
 
     //Getters and Setters (ne rabote lombok)

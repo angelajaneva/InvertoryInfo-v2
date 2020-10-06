@@ -33,7 +33,9 @@ public class Analysis {
 //    @ManyToMany(mappedBy = "gas")
 //    private List<Gas> gases;
 
-    @OneToMany(mappedBy = "analysis")
+    @OneToMany(
+            mappedBy = "analysis",
+            cascade = CascadeType.PERSIST)
     private List<AnalysisCategoryGas> categoryGases;
 
     //Getters and Setters (ne rabote lombok)

@@ -22,7 +22,9 @@ public class Gas {
     private String name;
     private double concentrate;
 
-    @OneToMany(mappedBy = "gas")
+    @OneToMany(
+            mappedBy = "gas",
+            cascade = CascadeType.PERSIST)
     private List<AnalysisCategoryGas> analysisCategory;
     //Getters and Setters (nesto ne rabote lombok)
 

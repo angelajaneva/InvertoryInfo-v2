@@ -41,4 +41,19 @@ public class CategoryServiceImpl implements CategoryService {
     public void deleteCategory(int id) {
         categoryRepository.deleteById(id);
     }
+
+    @Override
+    public Category getCategoryByName(String name) {
+        return categoryRepository.findByNameEquals(name);
+    }
+
+    @Override
+    public Category getCategoryByEnglishName(String name) {
+        return categoryRepository.findByEnglishNameEquals(name);
+    }
+
+    @Override
+    public Category findByPrefix(String prefix) {
+        return categoryRepository.findByPrefixEquals(prefix);
+    }
 }

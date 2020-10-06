@@ -7,8 +7,10 @@ import java.util.List;
 
 public interface AnalyseCategoryGasRepository extends JpaRepository<AnalysisCategoryGas, Integer> {
 
-    AnalysisCategoryGas findByAnalysis_IdAndCategory_IdAndGas_Id(int analysis_id, int category_id, int gas_id);
+    AnalysisCategoryGas findByAnalysis_IdAndCategory_IdAndGas_Id(int analysisId, int categoryId, int gasId);
 
     List<AnalysisCategoryGas> findByAnalysis_IdAndCategory_Id(int analysisId, int categoryId);
+
+    List<AnalysisCategoryGas> findByGas_IdAndCategory_Id(int gasId, int categoryId);
 
 }
