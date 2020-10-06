@@ -1,9 +1,7 @@
 package mk.gov.moepp.emi.invertoryinfo.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.*;
 import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
@@ -14,6 +12,7 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode(of = "id")
 @Entity
 @Table(name = "analysis")
 @Where(clause = "deleted=false")
@@ -33,9 +32,8 @@ public class Analysis {
 //    @ManyToMany(mappedBy = "gas")
 //    private List<Gas> gases;
 
-    @OneToMany(
-            mappedBy = "analysis",
-            cascade = CascadeType.PERSIST)
+    @OneToMany(mappedBy = "analysis", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<AnalysisCategoryGas> categoryGases;
 
     //Getters and Setters (ne rabote lombok)

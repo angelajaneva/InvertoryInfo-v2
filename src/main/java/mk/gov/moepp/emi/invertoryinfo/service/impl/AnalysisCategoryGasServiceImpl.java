@@ -5,7 +5,11 @@ import mk.gov.moepp.emi.invertoryinfo.model.AnalysisCategoryGas;
 import mk.gov.moepp.emi.invertoryinfo.model.Category;
 import mk.gov.moepp.emi.invertoryinfo.model.Gas;
 import mk.gov.moepp.emi.invertoryinfo.repository.AnalyseCategoryGasRepository;
+import mk.gov.moepp.emi.invertoryinfo.repository.AnalysisRepository;
 import mk.gov.moepp.emi.invertoryinfo.service.AnalysisCategoryGasService;
+import mk.gov.moepp.emi.invertoryinfo.service.AnalysisService;
+import mk.gov.moepp.emi.invertoryinfo.service.CategoryService;
+import mk.gov.moepp.emi.invertoryinfo.service.GasService;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -15,9 +19,16 @@ import java.util.List;
 public class AnalysisCategoryGasServiceImpl implements AnalysisCategoryGasService {
 
     private final AnalyseCategoryGasRepository analyseCategoryGasRepository;
+    private final CategoryService categoryService;
+    private final GasService gasService;
+    private final AnalysisRepository analysisRepository;
 
-    public AnalysisCategoryGasServiceImpl(AnalyseCategoryGasRepository analyseCategoryGasRepository) {
+
+    public AnalysisCategoryGasServiceImpl(AnalyseCategoryGasRepository analyseCategoryGasRepository, CategoryService categoryService, GasService gasService, AnalysisRepository analysisRepository) {
         this.analyseCategoryGasRepository = analyseCategoryGasRepository;
+        this.categoryService = categoryService;
+        this.gasService = gasService;
+        this.analysisRepository = analysisRepository;
     }
 
     @Override
@@ -32,8 +43,17 @@ public class AnalysisCategoryGasServiceImpl implements AnalysisCategoryGasServic
 
     @Override
     public AnalysisCategoryGas saveAnalysisCategoryGas(Analysis analysis, Category category, Gas gas) {
-        if (analysis != null && category != null && gas != null)
-            return analyseCategoryGasRepository.save(new AnalysisCategoryGas(analysis, category, gas));
+        if (analysis != null && category != null && gas != null) {
+            analysis = analysisRepository.save(analysis);
+            category = categoryService.saveCategory(category);
+            gas = gasService.saveGas(gas);
+
+            AnalysisCategoryGas analysisCategoryGas = new AnalysisCategoryGas();
+            analysisCategoryGas.setAnalysis(analysis);
+            analysisCategoryGas.setCategory(category);
+            analysisCategoryGas.setGas(gas);
+            return analyseCategoryGasRepository.save(analysisCategoryGas);
+        }
         else throw new ResourceNotFoundException("Analysis, Category or Gas cant be null");
     }
 

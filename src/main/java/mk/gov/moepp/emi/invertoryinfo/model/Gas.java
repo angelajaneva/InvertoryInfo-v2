@@ -1,10 +1,8 @@
 package mk.gov.moepp.emi.invertoryinfo.model;
 
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.*;
 
 import javax.persistence.*;
 import java.util.List;
@@ -13,6 +11,7 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode(of = "id")
 @Entity
 public class Gas {
 
@@ -22,9 +21,8 @@ public class Gas {
     private String name;
     private double concentrate;
 
-    @OneToMany(
-            mappedBy = "gas",
-            cascade = CascadeType.PERSIST)
+    @OneToMany(mappedBy = "gas", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<AnalysisCategoryGas> analysisCategory;
     //Getters and Setters (nesto ne rabote lombok)
 

@@ -107,6 +107,9 @@ public class AnalysisServiceImpl_v2 implements AnalysisService{
                     Iterator<Cell> cellIterator = row.cellIterator();
                     while (cellIterator.hasNext()){
                         Cell cell = cellIterator.next();
+                        if (cell.getCellType() == CellType._NONE || cell.getCellType() == CellType.BLANK){
+                            break;
+                        }
                         //doznavame koj tip e
                         if (!isNumber(cell) && categoriesRowNum == Integer.MAX_VALUE){
                             //momentalno i godinata ni e vo string verzija (za sekoj slucaj proverka)
@@ -146,7 +149,7 @@ public class AnalysisServiceImpl_v2 implements AnalysisService{
                             if (cell.getCellType() == CellType.STRING){
                                 //znaci e kategorija
                                 whichCategoryName = cell.getColumnIndex() + 1;
-                                String text = cell.getStringCellValue();
+                                String text = cell.getStringCellValue().trim();
                                 if (!emptyString(text)) {
                                     category = getCategory(category, text, cell.getColumnIndex(), fileType);
                                 }
@@ -227,8 +230,6 @@ public class AnalysisServiceImpl_v2 implements AnalysisService{
 
 
     Category getCategory(Category category, String text, int columnIndex, FileType fileType){
-
-
         // dokolku ima - znaci ima nekoj prefix
         if (text.contains("-")){
             String prefix = text.substring(0, text.indexOf("-")).trim();
@@ -242,7 +243,9 @@ public class AnalysisServiceImpl_v2 implements AnalysisService{
             if (prefix.contains(".")){
                 prefix = prefix.substring(0, prefix.lastIndexOf("."));
                 Category subcategory = categoryService.findByPrefix(prefix);
-                category.setSubcategory(subcategory);
+                if (subcategory != null) {
+                    category.setSubcategory(subcategory);
+                }
             }
 
         }
@@ -285,6 +288,6 @@ public class AnalysisServiceImpl_v2 implements AnalysisService{
     }
 
     boolean emptyString(String text){
-       return text.isEmpty() || text.isBlank();
+       return text.isEmpty() || text.isBlank() || text.equals("");
     }
 }

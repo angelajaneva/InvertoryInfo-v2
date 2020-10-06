@@ -2,10 +2,7 @@ package mk.gov.moepp.emi.invertoryinfo.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
 import java.util.HashSet;
@@ -16,6 +13,7 @@ import java.util.Set;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode(of = "id")
 @Entity
 public class Category {
 
@@ -33,7 +31,7 @@ public class Category {
 
     //subcategory?
     @ManyToOne
-    @JoinColumn(name = "subcategory", referencedColumnName = "id")
+    @JoinColumn(name = "subcategory", referencedColumnName = "Id")
     @JsonManagedReference
     private Category subcategory;
 
@@ -48,9 +46,8 @@ public class Category {
 //    private List<Gas> gases;
 
     //mapped by???
-    @OneToMany(
-            mappedBy = "category",
-            cascade = CascadeType.PERSIST)
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<AnalysisCategoryGas> analysisGases;
 
     //Getters and Setters (ne rabote lombok)

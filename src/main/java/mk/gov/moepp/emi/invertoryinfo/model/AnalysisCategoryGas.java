@@ -1,12 +1,19 @@
 package mk.gov.moepp.emi.invertoryinfo.model;
 
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import lombok.*;
 
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Objects;
 
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
+@EqualsAndHashCode(of = "id")
+@Table(name = "analysis_category_Gas")
 public class AnalysisCategoryGas {
 
     @Id
@@ -15,32 +22,20 @@ public class AnalysisCategoryGas {
 
     @ManyToOne
 //    @JoinColumn(name = "fk_analysis", insertable = false, updatable = false)
+    @JsonManagedReference
     private Analysis analysis;
 
 
     @ManyToOne
 //    @JoinColumn(name = "fk_category", insertable = false, updatable = false)
+    @JsonManagedReference
     private Category category;
 
     @ManyToOne
 //    @JoinColumn(name = "fk_gas", insertable = false, updatable = false)
+    @JsonManagedReference
     private Gas gas;
 
-    public AnalysisCategoryGas(Analysis analysis, Category category, Gas gas) {
-
-
-        this.analysis = analysis;
-        this.category = category;
-        this.gas = gas;
-    }
-
-    public AnalysisCategoryGas() {
-
-    }
-
-    //    public AnalysisCategoryGasId getId() {
-//        return id;
-//    }
     public int getId(){
         return id;
     }
