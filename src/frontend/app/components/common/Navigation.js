@@ -45,7 +45,6 @@ class Navigation extends Component {
             <nav className="navbar-default navbar-static-side" role="navigation">
                     <ul className="nav metismenu" id="side-menu" ref="menu">
                         <li className="nav-header">
-                            <ToogleSwitch/>
                         </li>
                         <li className={this.activeRoute("/main")} onClick={this.showYearsList}>
                             <Link to="/main"><i className="fa fa-list-ul"/>
