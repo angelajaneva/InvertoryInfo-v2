@@ -120,6 +120,8 @@ public class AnalysisServiceImpl_v2 implements AnalysisService{
 
                             if (rowNum == 0){
                                 if (text.toLowerCase().startsWith("inventory year:")){
+                                    //momentalno error ce mavnime
+
                                     fileType = FileType.YEARLY;
                                     String[] parts = text.split("\\s+");
                                     String year = parts[parts.length-1].trim();
