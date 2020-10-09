@@ -6,7 +6,7 @@
 //import mk.gov.moepp.emi.invertoryinfo.model.Gas;
 //import mk.gov.moepp.emi.invertoryinfo.model.Requests.CreateAnalysisRequest;
 //import mk.gov.moepp.emi.invertoryinfo.model.enums.FileType;
-//import mk.gov.moepp.emi.invertoryinfo.repository.AnalyseCategoryGasRepository;
+//import mk.gov.moepp.emi.invertoryinfo.repository.AnalysisCategoryGasRepository;
 //import mk.gov.moepp.emi.invertoryinfo.repository.AnalysisRepository;
 //import mk.gov.moepp.emi.invertoryinfo.repository.CategoryRepository;
 //import mk.gov.moepp.emi.invertoryinfo.repository.GasRepository;
@@ -33,9 +33,9 @@
 //    private final AnalysisRepository analysisRepository;
 //    private final CategoryRepository categoryRepository;
 //    private final GasRepository gasRepository;
-//    private final AnalyseCategoryGasRepository analyseCategoryGasRepository;
+//    private final AnalysisCategoryGasRepository analyseCategoryGasRepository;
 //
-//    public AnalysisServiceImpl(AnalysisRepository analysisRepository, CategoryRepository categoryRepository, GasRepository gasRepository, AnalyseCategoryGasRepository analyseCategoryGasRepository) {
+//    public AnalysisServiceImpl(AnalysisRepository analysisRepository, CategoryRepository categoryRepository, GasRepository gasRepository, AnalysisCategoryGasRepository analyseCategoryGasRepository) {
 //        this.analysisRepository = analysisRepository;
 //        this.categoryRepository = categoryRepository;
 //        this.gasRepository = gasRepository;

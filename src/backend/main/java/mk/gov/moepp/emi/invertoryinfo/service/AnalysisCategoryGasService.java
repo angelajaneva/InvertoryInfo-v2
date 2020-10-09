@@ -23,10 +23,12 @@ public interface AnalysisCategoryGasService {
 
     List<AnalysisCategoryGas> findByGasAndCategory(Gas gas, Category category);
 
-    AnalysisCategoryGas findByAnalyseCategoryAndGas(Analysis analysis, Category category, Gas gas);
+    AnalysisCategoryGas findByAnalysisCategoryAndGas(Analysis analysis, Category category, Gas gas);
 
-    AnalysisCategoryGas findByAnalyseCategoryAndGasName(Analysis analysis, Category category, Gas gas);
+    AnalysisCategoryGas findByAnalysisCategoryAndGasName(Analysis analysis, Category category, Gas gas);
 
     List<AnalysisCategoryGas> saveAllAnalysisCategoryGas(List<AnalysisCategoryGas> analysisCategoryGases);
+
+    List<AnalysisCategoryGas> findByGas_Name(String name);
 
 }
