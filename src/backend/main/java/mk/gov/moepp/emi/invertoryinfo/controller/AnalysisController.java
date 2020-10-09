@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.FileNotFoundException;
+import java.util.List;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:3000")
@@ -43,4 +44,31 @@ public class AnalysisController {
 
         return analysisService.saveFromFile(request);
     }
+
+    @GetMapping
+    public List<Analysis> getAllAnalysis(){
+        return analysisService.getAllAnalysis();
+    }
+
+    @GetMapping(path = "{id}")
+    public Analysis getAnalysisById(@PathVariable int id){
+        return analysisService.getAnalysisById(id);
+    }
+
+    @PostMapping(path = "/save")
+    public Analysis saveAnalysis(Analysis analysis){
+        return analysisService.saveAnalysis(analysis);
+    }
+
+    // ako treba mozze DTO
+    @PatchMapping(path = "/edit")
+    public Analysis editAnalysis(Analysis analysis){
+        return analysisService.editAnalysis(analysis);
+    }
+
+    @DeleteMapping(path = "/delete/{id}")
+    public void deleteAnalysis(@PathVariable int id){
+        analysisService.deleteAnalysis(id);
+    }
+
 }
