@@ -1,5 +1,6 @@
 package mk.gov.moepp.emi.invertoryinfo.service.impl;
 
+import mk.gov.moepp.emi.invertoryinfo.exception.FileNotSupported;
 import mk.gov.moepp.emi.invertoryinfo.model.Analysis;
 import mk.gov.moepp.emi.invertoryinfo.model.AnalysisCategoryGas;
 import mk.gov.moepp.emi.invertoryinfo.model.Category;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.transaction.Transactional;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.time.Year;
 import java.util.ArrayList;
@@ -29,7 +31,7 @@ import java.util.Iterator;
 import java.util.List;
 
 @Service
-public class AnalysisServiceImpl_v2 implements AnalysisService{
+public class AnalysisServiceImpl_v2 implements AnalysisService {
     private final AnalysisRepository analysisRepository;
     private final CategoryService categoryService;
     private final GasService gasService;
@@ -82,128 +84,130 @@ public class AnalysisServiceImpl_v2 implements AnalysisService{
         try {
             XSSFWorkbook workbook = new XSSFWorkbook(file.getInputStream());
             int numberOfSheets = workbook.getNumberOfSheets();
-            for (int i = 0; i < numberOfSheets; i++){
 
-                XSSFSheet xssfSheet = workbook.getSheetAt(i);
-                Iterator<Row> rowIterator = xssfSheet.rowIterator();
-                //vo zavisnost od tipot na analizata cuvame analiza ili gas
-                Analysis analysis = null;
-                Gas gas = null;
-                FileType fileType = FileType.GAS;
+            if (numberOfSheets > 0) {
+                throw new FileNotSupported("Only support files with 1 sheet");
+            }
 
-                //doznavame na koj red ni se kategoriite
-                int categoriesRowNum = Integer.MAX_VALUE;
+            XSSFSheet xssfSheet = workbook.getSheetAt(0);
+            Iterator<Row> rowIterator = xssfSheet.rowIterator();
+            //vo zavisnost od tipot na analizata cuvame analiza ili gas
+            Analysis analysis = null;
+            Gas gas = null;
+            FileType fileType = FileType.GAS;
 
-                //cuvam godina ili gas
-                List<String> list = new ArrayList<>();
-                List<AnalysisCategoryGas> analysisCategoryGases = new ArrayList<>();
+            //doznavame na koj red ni se kategoriite
+            int categoriesRowNum = Integer.MAX_VALUE;
 
-                while (rowIterator.hasNext()){
-                    Row row = rowIterator.next();
+            //cuvam godina ili gas
+            List<String> list = new ArrayList<>();
+            List<AnalysisCategoryGas> analysisCategoryGases = new ArrayList<>();
 
-                    Category category = new Category();
+            while (rowIterator.hasNext()) {
+                Row row = rowIterator.next();
 
-                    boolean skipRow = false;
-                    int rowNum = row.getRowNum();
+                Category category = new Category();
 
-                    int whichCategoryName = 0;
-                    Iterator<Cell> cellIterator = row.cellIterator();
-                    while (cellIterator.hasNext()){
-                        Cell cell = cellIterator.next();
-                        if (cell.getCellType() == CellType._NONE || cell.getCellType() == CellType.BLANK){
-                            break;
-                        }
-                        //doznavame koj tip e
-                        if (!isNumber(cell) && categoriesRowNum == Integer.MAX_VALUE){
-                            //momentalno i godinata ni e vo string verzija (za sekoj slucaj proverka)
-                            String text = cell.getStringCellValue().trim();
+                boolean skipRow = false;
+                int rowNum = row.getRowNum();
 
-                            if (rowNum == 0){
-                                if (text.toLowerCase().startsWith("inventory year:")){
-                                    //momentalno error ce mavnime
-
-                                    fileType = FileType.YEARLY;
-                                    String[] parts = text.split("\\s+");
-                                    String year = parts[parts.length-1].trim();
-                                //    Year year = getYearFromString(strYear);
-                                    analysis = getAnalysis(year);
-                                } else if (!emptyString(text)){
-                                    fileType = FileType.GAS;
-                                    gas = new Gas();
-                                    gas.setName(text);
-                                }
-                            } else if (text.toLowerCase().equals("categories")){
-                                //go nagoduvame deka tuka ni se kategoriite
-                                categoriesRowNum = rowNum;
-                            }
-                        }
-                        else if (categoriesRowNum == rowNum){
-                            String text = null;
-                            if (isNumber(cell)) {
-                                double strYear = cell.getNumericCellValue();
-                                Year year = getYearFromString(String.valueOf(strYear));
-                                text = year.toString();
-                            }else {
-                                text = cell.getStringCellValue();
-                            }
-                           list.add(text);
-                        }
-                        else if(rowNum > categoriesRowNum && list.size() > 0){
-                            //moze da pocnime da gi citame kategoriite
-                            //proveruvame dali e kategorija ili e concentrate
-                            if (cell.getCellType() == CellType.STRING){
-                                //znaci e kategorija
-                                whichCategoryName = cell.getColumnIndex() + 1;
-                                String text = cell.getStringCellValue().trim();
-                                if (!emptyString(text)) {
-                                    category = getCategory(category, text, cell.getColumnIndex(), fileType);
-                                }
-                            } else if (isNumber(cell)){
-                                double concentrate = cell.getNumericCellValue();
-                                if (fileType == FileType.GAS){
-                                    //a barame analizata za dadenata godina
-                                    String year = list.get(cell.getColumnIndex() - whichCategoryName);
-                                    analysis = getAnalysis(year);
-                                    //kreirame nov Gas za dadenata vrska
-                                    //dokolku pogore ispadnalo greska i gas ni e null togas error
-                                    if (gas == null){
-                                        throw new ResourceNotFoundException("Gas not found");
-                                    }
-                                    //go cuvame name vo promenliva
-                                    String name = gas.getName();
-                                    //kreirame nov gas za da imame novo id
-                                    gas = new Gas();
-                                    gas.setName(name);
-                                    gas.setConcentrate(concentrate);
-                                    if (category != null) {
-                                        //gasService.saveGas(gas);
-                                        analysisCategoryGases.add(createAnalysisCategoryGas(analysis, category, gas, fileType));
-                                    }
-                                }
-                                else {
-                                    Gas newGas = new Gas();
-                                    newGas.setName(list.get(cell.getColumnIndex() - whichCategoryName));
-                                    newGas.setConcentrate(concentrate);
-
-                                    if (category != null) {
-                                        //gasService.saveGas(gas);
-                                        analysisCategoryGases.add(createAnalysisCategoryGas(analysis, category, gas, fileType));
-                                    }
-                                }
-                            } else if (cell.getCellType() == CellType._NONE || cell.getCellType() == CellType.BLANK){
-                                skipRow = true;
-                            }
-                        }
-                    }
-                    //dokolku imame prazen string da skipnime
-                    if (skipRow){
+                //Moze da ima vrednost 1 ili 2
+                //ni oznacuva kolku koloni imame za imeto na kategoriata
+                int whichCategoryName = 0;
+                Iterator<Cell> cellIterator = row.cellIterator();
+                while (cellIterator.hasNext()) {
+                    Cell cell = cellIterator.next();
+                    if (cell.getCellType() == CellType._NONE || cell.getCellType() == CellType.BLANK) {
                         break;
                     }
+                    //doznavame koj tip e
+                    if (!isNumber(cell) && categoriesRowNum == Integer.MAX_VALUE) {
+                        //momentalno i godinata ni e vo string verzija (za sekoj slucaj proverka)
+                        String text = cell.getStringCellValue().trim();
+
+                        if (rowNum == 0) {
+                            if (text.toLowerCase().startsWith("inventory year:")) {
+                                //momentalno error ce mavnime
+                                throw new FileNotSupported("Only reading by GAS");
+//
+//                                    fileType = FileType.YEARLY;
+//                                    String[] parts = text.split("\\s+");
+//                                    String year = parts[parts.length-1].trim();
+//                                //    Year year = getYearFromString(strYear);
+//                                    analysis = getAnalysis(year);
+                            } else if (!emptyString(text)) {
+                                fileType = FileType.GAS;
+                                gas = new Gas();
+                                gas.setName(text);
+                            }
+                        } else if (text.toLowerCase().equals("categories")) {
+                            //go nagoduvame deka tuka ni se kategoriite
+                            categoriesRowNum = rowNum;
+                        }
+                    } else if (categoriesRowNum == rowNum) {
+                        String text = null;
+                        if (isNumber(cell)) {
+                            //ako citame spored godina
+                            double strYear = cell.getNumericCellValue();
+                            Year year = getYearFromString(String.valueOf(strYear));
+                            text = year.toString();
+                        } else {
+                            text = cell.getStringCellValue();
+                        }
+                        list.add(text);
+                    } else if (rowNum > categoriesRowNum && list.size() > 0) {
+                        //moze da pocnime da gi citame kategoriite
+                        //proveruvame dali e kategorija ili e concentrate
+                        if (cell.getCellType() == CellType.STRING) {
+                            //znaci e kategorija
+                            whichCategoryName = cell.getColumnIndex() + 1;
+                            String text = cell.getStringCellValue().trim();
+                            if (!emptyString(text)) {
+                                category = getCategory(category, text, cell.getColumnIndex(), fileType);
+                            }
+                        } else if (isNumber(cell)) {
+                            double concentrate = cell.getNumericCellValue();
+                            if (fileType == FileType.GAS) {
+                                //a barame analizata za dadenata godina
+                                String year = list.get(cell.getColumnIndex() - whichCategoryName);
+                                analysis = getAnalysis(year);
+                                //kreirame nov Gas za dadenata vrska
+                                //dokolku pogore ispadnalo greska i gas ni e null togas error
+                                if (gas == null) {
+                                    throw new ResourceNotFoundException("Gas not found");
+                                }
+                                //go cuvame name vo promenliva
+                                String name = gas.getName();
+                                //kreirame nov gas za da imame novo id
+                                gas = new Gas();
+                                gas.setName(name);
+                                gas.setConcentrate(concentrate);
+                                if (category != null) {
+                                    analysisCategoryGases.add(createAnalysisCategoryGas(analysis, category, gas, fileType));
+                                }
+                            } else {
+                                Gas newGas = new Gas();
+                                newGas.setName(list.get(cell.getColumnIndex() - whichCategoryName));
+                                newGas.setConcentrate(concentrate);
+
+                                if (category != null) {
+                                    //gasService.saveGas(gas);
+                                    analysisCategoryGases.add(createAnalysisCategoryGas(analysis, category, gas, fileType));
+                                }
+                            }
+                        } else if (cell.getCellType() == CellType._NONE || cell.getCellType() == CellType.BLANK) {
+                            skipRow = true;
+                        }
+                    }
                 }
-
-                analysisCategoryGases = analysisCategoryGasService.saveAllAnalysisCategoryGas(analysisCategoryGases);
-
+                //dokolku imame prazen string da skipnime
+                if (skipRow) {
+                    break;
+                }
             }
+
+            analysisCategoryGases = analysisCategoryGasService.saveAllAnalysisCategoryGas(analysisCategoryGases);
+
             workbook.close();
 
         } catch (IOException e) {
@@ -211,7 +215,7 @@ public class AnalysisServiceImpl_v2 implements AnalysisService{
         }
     }
 
-    AnalysisCategoryGas createAnalysisCategoryGas(Analysis analysis, Category category, Gas gas, FileType fileType){
+    AnalysisCategoryGas createAnalysisCategoryGas(Analysis analysis, Category category, Gas gas, FileType fileType) {
         List<AnalysisCategoryGas> gasses;
 
         categoryService.saveCategory(category);
@@ -223,7 +227,7 @@ public class AnalysisServiceImpl_v2 implements AnalysisService{
         }
 
         for (AnalysisCategoryGas temp : gasses) {
-            if (temp.getGas().getName().equals(gas.getName())){
+            if (temp.getGas().getName().equals(gas.getName())) {
                 double concentrate = gas.getConcentrate();
                 gas = temp.getGas();
                 gas.setConcentrate(concentrate);
@@ -241,18 +245,18 @@ public class AnalysisServiceImpl_v2 implements AnalysisService{
     }
 
 
-    Category getCategory(Category category, String text, int columnIndex, FileType fileType){
+    Category getCategory(Category category, String text, int columnIndex, FileType fileType) {
         // dokolku ima - znaci ima nekoj prefix
-        if (text.contains("-")){
+        if (text.contains("-")) {
             String prefix = text.substring(0, text.indexOf("-")).trim();
             category.setPrefix(prefix);
             //prebaruvame dali imame vekje nekoja kategorija so toj prefix i dokolku go nema angliskoto ili makedonskoto ime da se stavi
             Category oldCategory = categoryService.findByPrefix(category.getPrefix());
-            if (oldCategory != null){
+            if (oldCategory != null) {
                 category = oldCategory;
             }
             //mestime subcategory
-            if (prefix.contains(".")){
+            if (prefix.contains(".")) {
                 prefix = prefix.substring(0, prefix.lastIndexOf("."));
                 Category subcategory = categoryService.findByPrefix(prefix);
                 if (subcategory != null) {
@@ -261,14 +265,14 @@ public class AnalysisServiceImpl_v2 implements AnalysisService{
             }
 
         }
-        if (fileType == FileType.GAS){
+        if (fileType == FileType.GAS) {
             //vo gas prvata kolona ni e makedonski vtorata na angliski
-            if (columnIndex == 0){
+            if (columnIndex == 0) {
                 category.setName(text);
-            }else {
+            } else {
                 category.setEnglishName(text);
             }
-        } else if (columnIndex == 0){
+        } else if (columnIndex == 0) {
             // ako e YEARLY prvata kolona ni e angliski imeto
             category.setEnglishName(text);
         }
@@ -276,9 +280,9 @@ public class AnalysisServiceImpl_v2 implements AnalysisService{
         return category;
     }
 
-    Analysis getAnalysis(String year){
+    Analysis getAnalysis(String year) {
         Analysis analysis = analysisRepository.findByYearEquals(year);
-        if (analysis != null){
+        if (analysis != null) {
             return analysis;
         }
         analysis = new Analysis();
@@ -287,19 +291,19 @@ public class AnalysisServiceImpl_v2 implements AnalysisService{
         return analysisRepository.save(analysis);
     }
 
-    Year getYearFromString(String strYear){
+    Year getYearFromString(String strYear) {
         //dokolku a zeme double vrednost ima 1990.00 a da parsiram vo integer mi dava error
-        if (strYear.contains(".")){
+        if (strYear.contains(".")) {
             strYear = strYear.substring(0, strYear.indexOf("."));
         }
         return Year.parse(strYear);
     }
 
-    boolean isNumber(Cell cell){
+    boolean isNumber(Cell cell) {
         return cell.getCellType() == CellType.NUMERIC || cell.getCellType() == CellType.FORMULA;
     }
 
-    boolean emptyString(String text){
-       return text.isEmpty() || text.isBlank() || text.equals("");
+    boolean emptyString(String text) {
+        return text.isEmpty() || text.isBlank() || text.equals("");
     }
 }
