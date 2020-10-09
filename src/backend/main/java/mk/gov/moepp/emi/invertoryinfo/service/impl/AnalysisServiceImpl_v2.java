@@ -85,7 +85,7 @@ public class AnalysisServiceImpl_v2 implements AnalysisService {
             XSSFWorkbook workbook = new XSSFWorkbook(file.getInputStream());
             int numberOfSheets = workbook.getNumberOfSheets();
 
-            if (numberOfSheets > 0) {
+            if (numberOfSheets > 1) {
                 throw new FileNotSupported("Only support files with 1 sheet");
             }
 
@@ -217,44 +217,67 @@ public class AnalysisServiceImpl_v2 implements AnalysisService {
 
     AnalysisCategoryGas createAnalysisCategoryGas(Analysis analysis, Category category, Gas gas, FileType fileType) {
         List<AnalysisCategoryGas> gasses;
+        AnalysisCategoryGas analysisCategoryGas;
 
         categoryService.saveCategory(category);
 
-        if (fileType == FileType.YEARLY) {
-            gasses = analysisCategoryGasService.findByAnalysisAndCategory(analysis, category);
-        } else {
-            gasses = analysisCategoryGasService.findByGasAndCategory(gas, category);
-        }
+        analysisCategoryGas = analysisCategoryGasService.findByAnalyseCategoryAndGas(analysis, category, gas);
 
-        for (AnalysisCategoryGas temp : gasses) {
-            if (temp.getGas().getName().equals(gas.getName())) {
-                double concentrate = gas.getConcentrate();
-                gas = temp.getGas();
-                gas.setConcentrate(concentrate);
-                break;
-            }
+        if (analysisCategoryGas != null){
+            //ako go najdime gasot deka postoe stavi mu concentrate kolku so trebe
+            double concentrate = gas.getConcentrate();
+            gas = analysisCategoryGas.getGas();
+            gas.setConcentrate(concentrate);
         }
         gasService.saveGas(gas);
-
-        AnalysisCategoryGas analysisCategoryGas = new AnalysisCategoryGas();
-        analysisCategoryGas.setAnalysis(analysis);
-        analysisCategoryGas.setCategory(category);
-        analysisCategoryGas.setGas(gas);
-
+        if (analysisCategoryGas == null) {
+            //ako ne postoe togas go zacuvuvame kako nova analiza
+            analysisCategoryGas = new AnalysisCategoryGas();
+            analysisCategoryGas.setAnalysis(analysis);
+            analysisCategoryGas.setCategory(category);
+            analysisCategoryGas.setGas(gas);
+        }
         return analysisCategoryGas;
     }
 
 
     Category getCategory(Category category, String text, int columnIndex, FileType fileType) {
+        if (fileType == FileType.GAS) {
+            //vo gas prvata kolona ni e makedonski vtorata na angliski
+            if (columnIndex == 0) {
+                Category temp = categoryService.getCategoryByName(category.getName());
+                if (temp != null){
+                    String english = category.getEnglishName();
+                    if (temp.getEnglishName() == null){
+                        temp.setEnglishName(english);
+                    }
+                    category = temp;
+                }
+            } else {
+                Category temp = categoryService.getCategoryByEnglishName(category.getEnglishName());
+                if (temp != null){
+                    String name = category.getEnglishName();
+                    if (temp.getName() == null){
+                        temp.setName(name);
+                    }
+                    category = temp;
+                }            }
+        } else if (columnIndex == 0) {
+            // ako e YEARLY prvata kolona ni e angliski imeto
+            Category temp = categoryService.getCategoryByEnglishName(category.getEnglishName());
+            if (temp != null){
+                String english = category.getEnglishName();
+                if (temp.getEnglishName() == null){
+                    temp.setEnglishName(english);
+                }
+                category = temp;
+            }
+        }
         // dokolku ima - znaci ima nekoj prefix
         if (text.contains("-")) {
             String prefix = text.substring(0, text.indexOf("-")).trim();
             category.setPrefix(prefix);
-            //prebaruvame dali imame vekje nekoja kategorija so toj prefix i dokolku go nema angliskoto ili makedonskoto ime da se stavi
-            Category oldCategory = categoryService.findByPrefix(category.getPrefix());
-            if (oldCategory != null) {
-                category = oldCategory;
-            }
+
             //mestime subcategory
             if (prefix.contains(".")) {
                 prefix = prefix.substring(0, prefix.lastIndexOf("."));
@@ -265,18 +288,7 @@ public class AnalysisServiceImpl_v2 implements AnalysisService {
             }
 
         }
-        if (fileType == FileType.GAS) {
-            //vo gas prvata kolona ni e makedonski vtorata na angliski
-            if (columnIndex == 0) {
-                category.setName(text);
-            } else {
-                category.setEnglishName(text);
-            }
-        } else if (columnIndex == 0) {
-            // ako e YEARLY prvata kolona ni e angliski imeto
-            category.setEnglishName(text);
-        }
-
+        
         return category;
     }
 
