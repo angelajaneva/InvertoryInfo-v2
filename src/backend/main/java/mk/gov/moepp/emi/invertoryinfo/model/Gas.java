@@ -20,7 +20,6 @@ public class Gas {
     private int id;
     @Column(unique = true)
     private String name;
-    private double concentrate;
 
     @OneToMany(mappedBy = "gas", cascade = CascadeType.ALL)
     @JsonIgnore
@@ -38,14 +37,5 @@ public class Gas {
     public void setName(String name) {
         this.name = name;
     }
-
-    public double getConcentrate() {
-        return concentrate;
-    }
-
-    public void setConcentrate(double concentrate) {
-        this.concentrate = concentrate;
-    }
-
 
 }

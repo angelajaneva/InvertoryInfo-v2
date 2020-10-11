@@ -17,4 +17,6 @@ public interface GasService {
 
     void deleteGas(int id);
 
+    Gas findByNameEquals(String name);
+
 }

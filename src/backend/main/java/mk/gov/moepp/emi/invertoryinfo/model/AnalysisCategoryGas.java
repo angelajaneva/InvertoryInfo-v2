@@ -38,6 +38,8 @@ public class AnalysisCategoryGas {
     @JsonManagedReference
     private Gas gas;
 
+    private double concentrate;
+
     public int getId(){
         return id;
     }
@@ -64,5 +66,13 @@ public class AnalysisCategoryGas {
 
     public void setGas(Gas gas) {
         this.gas = gas;
+    }
+
+    public double getConcentrate() {
+        return concentrate;
+    }
+
+    public void setConcentrate(double concentrate) {
+        this.concentrate = concentrate;
     }
 }

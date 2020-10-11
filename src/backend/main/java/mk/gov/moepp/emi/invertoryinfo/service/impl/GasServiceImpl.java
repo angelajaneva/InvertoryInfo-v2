@@ -41,4 +41,9 @@ public class GasServiceImpl implements GasService {
     public void deleteGas(int id) {
         gasRepository.deleteById(id);
     }
+
+    @Override
+    public Gas findByNameEquals(String name) {
+        return gasRepository.findByNameEquals(name);
+    }
 }
