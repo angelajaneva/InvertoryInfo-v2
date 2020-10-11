@@ -15,6 +15,7 @@ import mk.gov.moepp.emi.invertoryinfo.service.GasService;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
@@ -76,6 +77,7 @@ public class AnalysisServiceImpl_v2 implements AnalysisService {
         return null;
     }
 
+
     @Override
     @Transactional
     public void saveFromFile(MultipartFile file) {
@@ -100,6 +102,7 @@ public class AnalysisServiceImpl_v2 implements AnalysisService {
             //cuvam godina ili gas
             List<String> list = new ArrayList<>();
             List<AnalysisCategoryGas> analysisCategoryGases = new ArrayList<>();
+            //List<Gas> gases = new ArrayList<>();
 
             while (rowIterator.hasNext()) {
                 Row row = rowIterator.next();
@@ -125,14 +128,14 @@ public class AnalysisServiceImpl_v2 implements AnalysisService {
 
                         if (rowNum == 0) {
                             if (text.toLowerCase().startsWith("inventory year:")) {
-                                //momentalno error ce mavnime
+
                                 throw new FileNotSupported("Only reading by GAS");
-//
-//                                    fileType = FileType.YEARLY;
-//                                    String[] parts = text.split("\\s+");
-//                                    String year = parts[parts.length-1].trim();
+
+//                                fileType = FileType.YEARLY;
+//                                String[] parts = text.split("\\s+");
+//                                String year = parts[parts.length - 1].trim();
 //                                //    Year year = getYearFromString(strYear);
-//                                    analysis = getAnalysis(year);
+//                                analysis = getAnalysis(year);
                             } else if (!emptyString(text)) {
                                 fileType = FileType.GAS;
                                 gas = new Gas();
@@ -215,67 +218,44 @@ public class AnalysisServiceImpl_v2 implements AnalysisService {
 
     AnalysisCategoryGas createAnalysisCategoryGas(Analysis analysis, Category category, Gas gas, FileType fileType) {
         List<AnalysisCategoryGas> gasses;
-        AnalysisCategoryGas analysisCategoryGas;
 
         categoryService.saveCategory(category);
 
-        analysisCategoryGas = analysisCategoryGasService.findByAnalysisCategoryAndGas(analysis, category, gas);
+        if (fileType == FileType.YEARLY) {
+            gasses = analysisCategoryGasService.findByAnalysisAndCategory(analysis, category);
+        } else {
+            gasses = analysisCategoryGasService.findByGasAndCategory(gas, category);
+        }
 
-        if (analysisCategoryGas != null){
-            //ako go najdime gasot deka postoe stavi mu concentrate kolku so trebe
-            double concentrate = gas.getConcentrate();
-            gas = analysisCategoryGas.getGas();
-            gas.setConcentrate(concentrate);
+        for (AnalysisCategoryGas temp : gasses) {
+            if (temp.getGas().getName().equals(gas.getName())) {
+                double concentrate = gas.getConcentrate();
+                gas = temp.getGas();
+                gas.setConcentrate(concentrate);
+                break;
+            }
         }
         gasService.saveGas(gas);
-        if (analysisCategoryGas == null) {
-            //ako ne postoe togas go zacuvuvame kako nova analiza
-            analysisCategoryGas = new AnalysisCategoryGas();
-            analysisCategoryGas.setAnalysis(analysis);
-            analysisCategoryGas.setCategory(category);
-            analysisCategoryGas.setGas(gas);
-        }
+
+        AnalysisCategoryGas analysisCategoryGas = new AnalysisCategoryGas();
+        analysisCategoryGas.setAnalysis(analysis);
+        analysisCategoryGas.setCategory(category);
+        analysisCategoryGas.setGas(gas);
+
         return analysisCategoryGas;
     }
 
 
     Category getCategory(Category category, String text, int columnIndex, FileType fileType) {
-        if (fileType == FileType.GAS) {
-            //vo gas prvata kolona ni e makedonski vtorata na angliski
-            if (columnIndex == 0) {
-                Category temp = categoryService.getCategoryByName(category.getName());
-                if (temp != null){
-                    String english = category.getEnglishName();
-                    if (temp.getEnglishName() == null){
-                        temp.setEnglishName(english);
-                    }
-                    category = temp;
-                }
-            } else {
-                Category temp = categoryService.getCategoryByEnglishName(category.getEnglishName());
-                if (temp != null){
-                    String name = category.getEnglishName();
-                    if (temp.getName() == null){
-                        temp.setName(name);
-                    }
-                    category = temp;
-                }            }
-        } else if (columnIndex == 0) {
-            // ako e YEARLY prvata kolona ni e angliski imeto
-            Category temp = categoryService.getCategoryByEnglishName(category.getEnglishName());
-            if (temp != null){
-                String english = category.getEnglishName();
-                if (temp.getEnglishName() == null){
-                    temp.setEnglishName(english);
-                }
-                category = temp;
-            }
-        }
         // dokolku ima - znaci ima nekoj prefix
         if (text.contains("-")) {
             String prefix = text.substring(0, text.indexOf("-")).trim();
             category.setPrefix(prefix);
-
+            //prebaruvame dali imame vekje nekoja kategorija so toj prefix i dokolku go nema angliskoto ili makedonskoto ime da se stavi
+            Category oldCategory = categoryService.findByPrefix(category.getPrefix());
+            if (oldCategory != null) {
+                category = oldCategory;
+            }
             //mestime subcategory
             if (prefix.contains(".")) {
                 prefix = prefix.substring(0, prefix.lastIndexOf("."));
@@ -286,7 +266,18 @@ public class AnalysisServiceImpl_v2 implements AnalysisService {
             }
 
         }
-        
+        if (fileType == FileType.GAS) {
+            //vo gas prvata kolona ni e makedonski vtorata na angliski
+            if (columnIndex == 0) {
+                category.setName(text);
+            } else {
+                category.setEnglishName(text);
+            }
+        } else if (columnIndex == 0) {
+            // ako e YEARLY prvata kolona ni e angliski imeto
+            category.setEnglishName(text);
+        }
+
         return category;
     }
 

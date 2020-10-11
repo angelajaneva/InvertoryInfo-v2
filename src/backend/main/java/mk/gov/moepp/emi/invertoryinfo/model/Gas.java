@@ -18,6 +18,7 @@ public class Gas {
     @Id
     @GeneratedValue(strategy= GenerationType.AUTO)
     private int id;
+    @Column(unique = true)
     private String name;
     private double concentrate;
 
