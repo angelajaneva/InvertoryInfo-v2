@@ -21,11 +21,10 @@ public class Category {
     @GeneratedValue(strategy= GenerationType.AUTO)
     private int id;
 
-    @Column(unique = true)
     private String name;
 
     //privremeno englishName
-    @Column(name = "en_name", unique = true)
+    @Column(name = "en_name")
     private String englishName;
 
     private String prefix;
