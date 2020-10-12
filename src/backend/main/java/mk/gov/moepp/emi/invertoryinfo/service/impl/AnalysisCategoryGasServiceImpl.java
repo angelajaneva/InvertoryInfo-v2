@@ -8,7 +8,6 @@ import mk.gov.moepp.emi.invertoryinfo.repository.AnalysisCategoryGasRepository;
 import mk.gov.moepp.emi.invertoryinfo.repository.AnalysisRepository;
 import mk.gov.moepp.emi.invertoryinfo.service.AnalysisCategoryGasService;
 import mk.gov.moepp.emi.invertoryinfo.service.CategoryService;
-import mk.gov.moepp.emi.invertoryinfo.service.GasService;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -20,14 +19,12 @@ public class AnalysisCategoryGasServiceImpl implements AnalysisCategoryGasServic
 
     private final AnalysisCategoryGasRepository analysisCategoryGasRepository;
     private final CategoryService categoryService;
-    private final GasService gasService;
     private final AnalysisRepository analysisRepository;
 
 
-    public AnalysisCategoryGasServiceImpl(AnalysisCategoryGasRepository analysisCategoryGasRepository, CategoryService categoryService, GasService gasService, AnalysisRepository analysisRepository) {
+    public AnalysisCategoryGasServiceImpl(AnalysisCategoryGasRepository analysisCategoryGasRepository, CategoryService categoryService, AnalysisRepository analysisRepository) {
         this.analysisCategoryGasRepository = analysisCategoryGasRepository;
         this.categoryService = categoryService;
-        this.gasService = gasService;
         this.analysisRepository = analysisRepository;
     }
 
@@ -46,7 +43,7 @@ public class AnalysisCategoryGasServiceImpl implements AnalysisCategoryGasServic
         if (analysis != null && category != null && gas != null) {
             analysis = analysisRepository.save(analysis);
             category = categoryService.saveCategory(category);
-            gas = gasService.saveGas(gas);
+            //gas = gasService.saveGas(gas);
 
             AnalysisCategoryGas analysisCategoryGas = new AnalysisCategoryGas();
             analysisCategoryGas.setAnalysis(analysis);
@@ -77,21 +74,21 @@ public class AnalysisCategoryGasServiceImpl implements AnalysisCategoryGasServic
     @Override
     public List<AnalysisCategoryGas> findByGasAndCategory(Gas gas, Category category) {
         if (gas != null && category != null)
-            return analysisCategoryGasRepository.findByGas_IdAndCategory_Id(gas.getId(), category.getId());
+            return analysisCategoryGasRepository.findByGas_NameAndCategory_Id(gas.getName(), category.getId());
         else throw new ResourceNotFoundException("Gas and Category not founded");
     }
 
-    @Override
-    public AnalysisCategoryGas findByAnalysisCategoryAndGas(Analysis analysis, Category category, Gas gas) {
-        if (analysis != null && gas != null && category != null)
-            return analysisCategoryGasRepository.findByAnalysis_IdAndCategory_IdAndGas_Id(analysis.getId(), gas.getId(), category.getId());
-        else throw new ResourceNotFoundException("Analyse, Gas and Category not founded");
-    }
-
+//    @Override
+//    public AnalysisCategoryGas findByAnalysisCategoryAndGas(Analysis analysis, Category category, Gas gas) {
+//        if (analysis != null && gas != null && category != null)
+//            return analysisCategoryGasRepository.findByAnalysis_IdAndCategory_IdAndGas_Id(analysis.getId(), gas.getId(), category.getId());
+//        else throw new ResourceNotFoundException("Analyse, Gas and Category not founded");
+//    }
+//
     @Override
     public AnalysisCategoryGas findByAnalysisCategoryAndGasName(Analysis analysis, Category category, Gas gas) {
         if (analysis != null && gas != null && category != null)
-            return analysisCategoryGasRepository.findByAnalysis_IdAndCategory_IdAndGasName(analysis.getId(), gas.getId(), category.getName());
+            return analysisCategoryGasRepository.findByAnalysis_IdAndCategory_IdAndGasName(analysis.getId(), category.getId(), gas.getName());
         else throw new ResourceNotFoundException("Analyse, Gas and Category not founded");    }
 
     @Override
@@ -104,4 +101,5 @@ public class AnalysisCategoryGasServiceImpl implements AnalysisCategoryGasServic
     public List<AnalysisCategoryGas> findByGas_Name(String name) {
         return analysisCategoryGasRepository.findByGas_Name(name);
     }
+
 }

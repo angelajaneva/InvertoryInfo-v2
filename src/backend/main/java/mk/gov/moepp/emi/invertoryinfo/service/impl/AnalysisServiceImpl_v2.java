@@ -11,7 +11,6 @@ import mk.gov.moepp.emi.invertoryinfo.repository.AnalysisRepository;
 import mk.gov.moepp.emi.invertoryinfo.service.AnalysisCategoryGasService;
 import mk.gov.moepp.emi.invertoryinfo.service.AnalysisService;
 import mk.gov.moepp.emi.invertoryinfo.service.CategoryService;
-import mk.gov.moepp.emi.invertoryinfo.service.GasService;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
@@ -33,13 +32,11 @@ import java.util.List;
 public class AnalysisServiceImpl_v2 implements AnalysisService {
     private final AnalysisRepository analysisRepository;
     private final CategoryService categoryService;
-    private final GasService gasService;
     private final AnalysisCategoryGasService analysisCategoryGasService;
 
-    public AnalysisServiceImpl_v2(AnalysisRepository analysisRepository, CategoryService categoryService, GasService gasService, AnalysisCategoryGasService analysisCategoryGasService) {
+    public AnalysisServiceImpl_v2(AnalysisRepository analysisRepository, CategoryService categoryService, AnalysisCategoryGasService analysisCategoryGasService) {
         this.analysisRepository = analysisRepository;
         this.categoryService = categoryService;
-        this.gasService = gasService;
         this.analysisCategoryGasService = analysisCategoryGasService;
     }
 
@@ -179,20 +176,20 @@ public class AnalysisServiceImpl_v2 implements AnalysisService {
                                 //go cuvame name vo promenliva
                                 String name = gas.getName();
                                 //kreirame nov gas za da imame novo id
-                            //     gas = new Gas();
-                            //     gas.setName(name);
-                            //     gas.setConcentrate(concentrate);
+                                 gas = new Gas();
+                                 gas.setName(name);
+                                 gas.setConcentrate(concentrate);
                                 if (category != null) {
-                                    analysisCategoryGases.add(createAnalysisCategoryGas(analysis, category, gas, concentrate, fileType));
+                                    analysisCategoryGases.add(createAnalysisCategoryGas(analysis, category, gas, fileType));
                                 }
                             } else {
                                 Gas newGas = new Gas();
                                 newGas.setName(list.get(cell.getColumnIndex() - whichCategoryName));
-                          //      newGas.setConcentrate(concentrate);
+                                newGas.setConcentrate(concentrate);
 
                                 if (category != null) {
                                     //gasService.saveGas(gas);
-                                    analysisCategoryGases.add(createAnalysisCategoryGas(analysis, category, gas, concentrate, fileType));
+                                    analysisCategoryGases.add(createAnalysisCategoryGas(analysis, category, gas, fileType));
                                 }
                             }
                         } else if (cell.getCellType() == CellType._NONE || cell.getCellType() == CellType.BLANK) {
@@ -215,32 +212,30 @@ public class AnalysisServiceImpl_v2 implements AnalysisService {
         }
     }
 
-    private AnalysisCategoryGas createAnalysisCategoryGas(Analysis analysis, Category category, Gas gas, double concentrate, FileType fileType) {
+    private AnalysisCategoryGas createAnalysisCategoryGas(Analysis analysis, Category category, Gas gas, FileType fileType) {
         List<AnalysisCategoryGas> gasses;
 
         categoryService.saveCategory(category);
 
-//        if (fileType == FileType.YEARLY) {
-//            gasses = analysisCategoryGasService.findByAnalysisAndCategory(analysis, category);
-//        } else {
-//            gasses = analysisCategoryGasService.findByGasAndCategory(gas, category);
-//        }
-//
-//        for (AnalysisCategoryGas temp : gasses) {
-//            if (temp.getGas().getName().equals(gas.getName())) {
-//         //       double concentrate = gas.getConcentrate();
-//       //         gas = temp.getGas();
-//       //         gas.setConcentrate(concentrate);
-//                break;
-//            }
-//        }
-        gasService.saveGas(gas);
+        if (fileType == FileType.YEARLY) {
+            gasses = analysisCategoryGasService.findByAnalysisAndCategory(analysis, category);
+        } else {
+            gasses = analysisCategoryGasService.findByGasAndCategory(gas, category);
+        }
+
+        for (AnalysisCategoryGas temp : gasses) {
+            if (temp.getGas().getName().equals(gas.getName())) {
+                double concentrate = gas.getConcentrate();
+                gas = temp.getGas();
+                gas.setConcentrate(concentrate);
+                break;
+            }
+        }
 
         AnalysisCategoryGas analysisCategoryGas = new AnalysisCategoryGas();
         analysisCategoryGas.setAnalysis(analysis);
         analysisCategoryGas.setCategory(category);
         analysisCategoryGas.setGas(gas);
-        analysisCategoryGas.setConcentrate(concentrate);
 
         return analysisCategoryGas;
     }

@@ -1,33 +1,32 @@
 package mk.gov.moepp.emi.invertoryinfo.model;
 
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
+import mk.gov.moepp.emi.invertoryinfo.domain.ValueObject;
 
-import javax.persistence.*;
-import java.util.List;
+import javax.persistence.Column;
+import javax.persistence.Embeddable;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import java.util.Objects;
 
+@Embeddable
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode(of = "id")
-@Entity
-public class Gas {
+public class Gas implements ValueObject {
 
-    @Id
-    @GeneratedValue(strategy= GenerationType.AUTO)
-    private int id;
-    @Column(unique = true)
+
+//    @GeneratedValue(strategy= GenerationType.AUTO)
+//    @Column(name = "gas_id")
+//    private int id;
+//
     private String name;
+    private double concentrate;
 
-    @OneToMany(mappedBy = "gas", cascade = CascadeType.ALL)
-    @JsonIgnore
-    private List<AnalysisCategoryGas> analysisCategory;
-    //Getters and Setters (nesto ne rabote lombok)
-
-    public int getId() {
-        return id;
+    public Gas(String name, double concentrate) {
+        this.name = name;
+        this.concentrate = concentrate;
     }
 
     public String getName() {
@@ -38,4 +37,25 @@ public class Gas {
         this.name = name;
     }
 
+    public double getConcentrate() {
+        return concentrate;
+    }
+
+    public void setConcentrate(double concentrate) {
+        this.concentrate = concentrate;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Gas)) return false;
+        Gas gas = (Gas) o;
+        return Double.compare(gas.concentrate, concentrate) == 0 &&
+                name.equals(gas.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, concentrate);
+    }
 }

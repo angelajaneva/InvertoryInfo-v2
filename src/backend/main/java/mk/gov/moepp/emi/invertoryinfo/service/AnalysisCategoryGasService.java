@@ -23,7 +23,7 @@ public interface AnalysisCategoryGasService {
 
     List<AnalysisCategoryGas> findByGasAndCategory(Gas gas, Category category);
 
-    AnalysisCategoryGas findByAnalysisCategoryAndGas(Analysis analysis, Category category, Gas gas);
+//    AnalysisCategoryGas findByAnalysisCategoryAndGas(Analysis analysis, Category category, Gas gas);
 
     AnalysisCategoryGas findByAnalysisCategoryAndGasName(Analysis analysis, Category category, Gas gas);
 

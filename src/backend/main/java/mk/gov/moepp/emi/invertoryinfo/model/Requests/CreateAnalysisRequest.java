@@ -6,11 +6,11 @@ import java.time.Year;
 
 public class CreateAnalysisRequest {
 
-    private Year year;
+    private String year;
     private String gas;
     private MultipartFile file;
 
-    public CreateAnalysisRequest(Year year, String gas, MultipartFile file) {
+    public CreateAnalysisRequest(String year, String gas, MultipartFile file) {
         this.year = year;
         this.gas = gas;
         this.file = file;
@@ -24,11 +24,11 @@ public class CreateAnalysisRequest {
         this.gas = gas;
     }
 
-    public Year getYear() {
+    public String  getYear() {
         return year;
     }
 
-    public void setYear(Year year) {
+    public void setYear(String year) {
         this.year = year;
     }
 
